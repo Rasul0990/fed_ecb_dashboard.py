@@ -3,23 +3,21 @@ import streamlit as st
 import plotly.graph_objects as go
 
 # === Load FED data ===
-fed = pd.read_csv("FEDFUNDS.csv", parse_dates=["DATE"])
-fed = fed.rename(columns={"DATE": "Date", "FEDFUNDS": "Rate"})
+fed = pd.read_csv("fed.csv", parse_dates=["DATE"])
+fed = fed.rename(columns={"DATE": "Date", "Interest Rate": "Rate"})
 fed = fed.dropna()
 fed = fed.sort_values("Date")
 
 # === Load ECB data ===
-ecb = pd.read_csv("ECB Data Portal_20250512175431.csv", skiprows=5)
-ecb = ecb.rename(columns={"TIME_PERIOD": "Date", "OBS_VALUE": "Rate"})
-ecb["Date"] = pd.to_datetime(ecb["Date"], errors="coerce")
-ecb["Rate"] = pd.to_numeric(ecb["Rate"], errors="coerce")
+ecb = pd.read_csv("ecb.csv", parse_dates=["DATE"])
+ecb = ecb.rename(columns={"DATE": "Date", "Interest Rate": "Rate"})
 ecb = ecb.dropna()
 ecb = ecb.sort_values("Date")
 
-# 🖼️ App title
+# 🖼️ Title
 st.title("📊 FED vs ECB Interest Rate Dashboard")
 
-# 📅 Date selector
+# 📅 Date selection
 available_dates = pd.to_datetime(sorted(set(fed["Date"]).union(set(ecb["Date"]))))
 selected_dates = st.multiselect(
     "📌 Select up to 4 specific dates to highlight",
@@ -32,20 +30,22 @@ if len(selected_dates) > 4:
     st.warning("⚠️ You can only select up to 4 dates.")
     selected_dates = selected_dates[:4]
 
-# 📈 Line Chart
+# 📈 Plot chart
 fig = go.Figure()
 
 fig.add_trace(go.Scatter(
-    x=fed["Date"], y=fed["Rate"], name="FED",
+    x=fed["Date"], y=fed["Rate"],
+    mode="lines", name="FED",
     line=dict(color="blue")
 ))
 
 fig.add_trace(go.Scatter(
-    x=ecb["Date"], y=ecb["Rate"], name="ECB",
+    x=ecb["Date"], y=ecb["Rate"],
+    mode="lines", name="ECB",
     line=dict(color="orange")
 ))
 
-# 🔍 Highlight selected dates
+# 🔍 Highlight selected points
 for date in selected_dates:
     fed_point = fed.loc[fed["Date"] == date]
     ecb_point = ecb.loc[ecb["Date"] == date]
